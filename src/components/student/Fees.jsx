@@ -30,20 +30,28 @@ const StudentFees = ({ rollNo }) => {
 
     fetchFees();
   }, [rollNo]);
-
   const handlePayFee = async () => {
+    console.log("handlePayFee called");
+    console.log("Selected fee:", selectedFee);
+    console.log("Payment amount:", paymentAmount);
+
     if (!selectedFee || !paymentAmount || parseFloat(paymentAmount) <= 0) {
       setError("Please select a fee and enter a valid amount");
+      console.warn("Validation failed: invalid fee or payment amount");
       return;
     }
 
     const amount = parseFloat(paymentAmount);
     const balance = selectedFee.amount - selectedFee.paid_amount;
 
+    console.log(`Parsed amount: ${amount}, Balance: ${balance}`);
+
     if (amount > balance) {
-      setError(
-        `Payment amount cannot exceed the balance of ₹${balance.toFixed(2)}`
-      );
+      const errorMsg = `Payment amount cannot exceed the balance of ₹${balance.toFixed(
+        2
+      )}`;
+      setError(errorMsg);
+      console.warn("Validation failed:", errorMsg);
       return;
     }
 
@@ -51,6 +59,7 @@ const StudentFees = ({ rollNo }) => {
     setError(null);
 
     try {
+      console.log("Sending payment request to /api/student/pay-fees");
       const response = await fetch("/api/student/pay-fees", {
         method: "POST",
         headers: {
@@ -64,19 +73,26 @@ const StudentFees = ({ rollNo }) => {
       });
 
       const data = await response.json();
+      console.log("Response from payment API:", data);
 
       if (!response.ok || !data.id) {
-        throw new Error(data.message || "Failed to create checkout session");
+        const errorMsg = data.message || "Failed to create checkout session";
+        console.error("API error:", errorMsg);
+        throw new Error(errorMsg);
       }
 
+      console.log("Loading Stripe with publishable key");
       const stripe = await loadStripe(
         import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
       );
+
+      console.log("Redirecting to Stripe checkout with session ID:", data.id);
       const { error: stripeError } = await stripe.redirectToCheckout({
         sessionId: data.id,
       });
 
       if (stripeError) {
+        console.error("Stripe redirect error:", stripeError);
         throw stripeError;
       }
 
@@ -89,12 +105,78 @@ const StudentFees = ({ rollNo }) => {
           timestamp: Date.now(),
         })
       );
+      console.log("Stored pendingPayment in localStorage");
     } catch (err) {
-      console.error("Payment error:", err);
+      console.error("Payment error caught:", err);
       setError(err.message || "Payment processing failed");
       setLoading(false);
     }
   };
+
+  // const handlePayFee = async () => {
+  //   if (!selectedFee || !paymentAmount || parseFloat(paymentAmount) <= 0) {
+  //     setError("Please select a fee and enter a valid amount");
+  //     return;
+  //   }
+
+  //   const amount = parseFloat(paymentAmount);
+  //   const balance = selectedFee.amount - selectedFee.paid_amount;
+
+  //   if (amount > balance) {
+  //     setError(
+  //       `Payment amount cannot exceed the balance of ₹${balance.toFixed(2)}`
+  //     );
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   setError(null);
+
+  //   try {
+  //     const response = await fetch("/api/student/pay-fees", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //       body: JSON.stringify({
+  //         fee_id: selectedFee.id,
+  //         amount: paymentAmount,
+  //       }),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (!response.ok || !data.id) {
+  //       throw new Error(data.message || "Failed to create checkout session");
+  //     }
+
+  //     const stripe = await loadStripe(
+  //       import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  //     );
+  //     const { error: stripeError } = await stripe.redirectToCheckout({
+  //       sessionId: data.id,
+  //     });
+
+  //     if (stripeError) {
+  //       throw stripeError;
+  //     }
+
+  //     // Store payment info in localStorage in case redirect fails
+  //     localStorage.setItem(
+  //       "pendingPayment",
+  //       JSON.stringify({
+  //         feeId: selectedFee.id,
+  //         amount: paymentAmount,
+  //         timestamp: Date.now(),
+  //       })
+  //     );
+  //   } catch (err) {
+  //     console.error("Payment error:", err);
+  //     setError(err.message || "Payment processing failed");
+  //     setLoading(false);
+  //   }
+  // };
 
   // Check for pending payments on component mount
   useEffect(() => {
