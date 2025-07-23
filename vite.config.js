@@ -5,9 +5,9 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      axios: path.resolve(__dirname, 'src/api.js'), // ✅ Correct alias
-    },
+    // alias: {
+    //   axios: path.resolve(__dirname, 'src/api.js'), // ✅ Correct alias
+    // },
   },
   server: {
     proxy: {
