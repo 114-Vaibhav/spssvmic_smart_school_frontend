@@ -26,6 +26,7 @@ const Register = () => {
   };
 
   const handleSubmit = async (e) => {
+    return setError("Registration Closed");
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
