@@ -50,11 +50,11 @@ const AdmissionDashboard = () => {
         if (data.success) {
           setUser(data.student);
         } else {
-          navigate("/admission-registration");
+          navigate("/admission-login");
         }
       } catch (err) {
         console.error(err);
-        navigate("/admission-registration");
+        navigate("/admission-login");
       }
     };
 
@@ -64,7 +64,7 @@ const AdmissionDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     // navigate("/login");
-    navigate("/admission-registration");
+    navigate("/admission-login");
   };
   // const handleLogout = () => {
   //   localStorage.removeItem("admissionToken");
