@@ -1,9 +1,4 @@
 
----
-
-
-
-```markdown
 # SPSSVMIC Smart School Frontend
 
 This is the frontend part of the SPSSVMIC Smart School Website project.  
